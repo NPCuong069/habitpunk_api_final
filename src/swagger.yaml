@@ -1,0 +1,239 @@
+openapi: 3.0.0
+info:
+  title: HabitPunk API
+  version: 1.0.0
+  description: API for managing cyberpunk-themed habit tracking.
+servers:
+  - url: http://localhost:3000
+tags:
+  - name: Tasks
+    description: Operations related to task management
+  - name: Users
+    description: Operations related to user management
+paths:
+  /tasks:
+    get:
+      tags:
+        - Tasks
+      summary: List all tasks
+      responses:
+        '200':
+          description: A list of tasks.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+  /api/users:
+    get:
+      tags:
+        - Users
+      summary: List all users
+      description: Retrieves a list of all users in the database.
+      responses:
+        '200':
+          description: A list of users.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+  /api/secure-route:
+    get:
+      summary: Secure route
+      description: This is a secure route accessible only to authenticated users.
+      security:
+        - bearerAuth: [] 
+      responses:
+        '200':
+          description: Successful response
+        '401':
+          description: Unauthorized, token invalid or missing
+  /api/users/{userId}/experience:
+    post:
+      tags:
+        - Users
+      summary: Update user experience and level
+      description: Adds experience points to a user and handles leveling up if the maximum XP threshold is reached.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The ID of the user whose experience is being updated.
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                addXp:
+                  type: integer
+                  description: The amount of experience points to add.
+      responses:
+        '200':
+          description: User experience updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found.
+        '500':
+          description: Internal Server Error.
+  /api/user:
+    post:
+      tags:
+        - Users
+      summary: Register or login a user
+      description: Registers a new user or logs in an existing user using a Firebase ID token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Firebase ID token from the client.
+      responses:
+        '201':
+          description: A new user was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '200':
+          description: An existing user was retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Unauthorized access, invalid Firebase ID token.
+  /api/user/info:
+    get:
+      tags:
+        - Users
+      summary: Get user information
+      description: Retrieves detailed information for the logged-in user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved user information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found.
+        '500':
+          description: Internal server error.
+  /api/login:
+    post:
+      tags:
+        - Users
+      summary: Login or create a new user
+      description: Logs in a user or creates a new user if they do not exist using a Firebase ID token. Creates a user with default attributes if not found.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Firebase ID token from the client.
+      responses:
+        '200':
+          description: User logged in successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '201':
+          description: A new user was created and logged in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Unauthorized access, invalid Firebase ID token.
+  /api/dailies/{dailyId}/complete:
+    post:
+      tags:
+        - Dailies
+      summary: Complete a daily task
+      description: Marks a daily task as completed, increments clicks, and adds experience to the user.
+      parameters:
+        - name: dailyId
+          in: path
+          required: true
+          description: The ID of the daily task to complete.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Daily task updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Daily'
+        '400':
+          description: Task already completed.
+        '404':
+          description: Daily task not found.
+        '500':
+          description: Internal Server Error.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        completed:
+          type: boolean
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        hp:
+          type: integer
+        xp:
+          type: integer
+        en:
+          type: integer
+        lvl:
+          type: integer
+        coin:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        login_time:
+          type: string
+          format: date-time
+security:
+  - bearerAuth: []
