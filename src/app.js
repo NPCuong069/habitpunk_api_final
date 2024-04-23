@@ -5,11 +5,13 @@ const userRoutes = require('./api/userApi');
 const habitRoutes = require('./api/habitApi');
 const dailyRoutes = require('./api/dailyApi');
 const itemRoutes = require('./api/itemApi');
+const cors = require('cors');
+
 const app = express();
 
 // Load Swagger document as a JS object
 const swaggerDocument = YAML.load('./src/swagger.yaml'); // Make sure the path is correct
-
+app.use(cors());
 app.use(express.json());
 
 // Set up Swagger UI
