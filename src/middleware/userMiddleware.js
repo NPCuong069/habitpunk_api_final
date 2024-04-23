@@ -11,30 +11,31 @@ const getAllUsersHandler = async (req, res) => {
     res.status(500).send({ message: "Error retrieving users from the database." });
   }
 };
-const updateExperience = async (req, res) => {
-  const { userId } = req.params;
-  const { addXp } = req.body; // Amount of XP to add
+const updateExperience = async (userId, expToAdd) => {
+  const user = await db('users').where({ firebase_uid: userId }).first();
+  if (!user) throw new Error('User not found');
 
-  try {
-    let user = await getUserById(userId);
-    if (!user) {
-      return res.status(404).send('User not found');
-    }
+  let newExp = user.xp + expToAdd;
+  let newLevel = user.lvl;
+  const maxExp = user.lvl * 100;
 
-    user.xp += addXp;
-    const maxExp = user.lvl * 100;
-    while (user.xp >= maxExp) {
-      user.xp -= maxExp; // Subtract max XP from current XP
-      user.lvl += 1; // Increase level by 1
-    }
-
-    // Update user data in the database
-    const updatedUser = await updateUser(userId, { xp: user.xp, lvl: user.lvl });
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    console.error('Error updating user experience:', error);
-    res.status(500).send('Internal Server Error');
+  // Check if the new experience reaches or exceeds the level-up threshold
+  while (newExp >= maxExp) {
+      newExp -= maxExp;  // Reduce current experience by the max threshold
+      newLevel++;         // Increment the level
   }
+
+  // Update user with new experience and level
+  await db('users').where({ firebase_uid: userId }).update({
+      xp: newExp,
+      lvl: newLevel
+  });
+
+  return { newExp, newLevel };  // Optionally return new values for confirmation/testing
+};
+
+exports.updateUserHealthMana = async (userId, hpChange, enChange) => {
+  await db('users').where({ firebase_uid: userId }).increment('hp', hpChange).increment('en', enChange);
 };
 const verifyAndCreateUser = async (req, res, next) => {
   const { token } = req.body;
@@ -96,7 +97,7 @@ const loginUserOrCreate = async (req, res) => {
         xp: 0,
         en: 100,
         coin: 0,
-        hp: 100,
+        hp: 50,
         hat_id: 0,
         costume_id: 0,
         facial_id: 0,
@@ -126,5 +127,6 @@ module.exports = {
   verifyAndCreateUser,
   updateExperience,
   loginUserOrCreate,
-  getUserInfo
+  getUserInfo,
+  updateExperience
 };

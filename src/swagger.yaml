@@ -166,6 +166,196 @@ paths:
                 $ref: '#/components/schemas/User'
         '403':
           description: Unauthorized access, invalid Firebase ID token.
+  
+  /api/habits:
+    post:
+      tags:
+        - Habits
+      summary: Create a new habit
+      description: Adds a new habit for a user with default values for tracking progress.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - note
+                - difficulty
+              properties:
+                title:
+                  type: string
+                  description: Title of the habit.
+                note:
+                  type: string
+                  description: Detailed note or description of the habit.
+                difficulty:
+                  type: integer
+                  description: Difficulty rating of the habit (1-5 scale).
+      responses:
+        '201':
+          description: Habit created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+        '400':
+          description: Bad request if data is missing or invalid.
+        '401':
+          description: Unauthorized if the user is not authenticated.
+        '500':
+          description: Internal Server Error.
+  /api/habits:
+    get:
+      tags:
+        - Habits
+      summary: Retrieve all habits for a user
+      description: Returns a list of all habits associated with the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of habits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Habit'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /api/habits/{habitId}/perform:
+    post:
+      tags:
+        - Habits
+      summary: Perform an action on a habit
+      description: Allows a user to perform a positive or negative action on a habit.
+      parameters:
+        - in: path
+          name: habitId
+          required: true
+          schema:
+            type: string
+          description: The ID of the habit to perform an action on
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  description: The type of action ('positive' or 'negative')
+      responses:
+        '200':
+          description: Action performed successfully
+        '400':
+          description: Invalid request parameters
+        '404':
+          description: Habit not found
+        '500':
+          description: Server error
+  /api/dailies:
+    post:
+      tags:
+        - Dailies
+      summary: Create a new daily
+      description: Adds a new daily for a user with default values for tracking progress.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - note
+                - difficulty
+              properties:
+                title:
+                  type: string
+                  description: Title of the daily.
+                note:
+                  type: string
+                  description: Detailed note or description of the daily.
+                difficulty:
+                  type: integer
+                  description: Difficulty rating of the habit (1-5 scale).
+      responses:
+        '201':
+          description: Daily created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Daily'
+        '400':
+          description: Bad request if data is missing or invalid.
+        '401':
+          description: Unauthorized if the user is not authenticated.
+        '500':
+          description: Internal Server Error.
+  /api/dailies/{dailyId}/perform:
+    post:
+      tags:
+        - Dailies
+      summary: Perform an action on a habit
+      description: Allows a user to perform a positive or negative action on a habit.
+       parameters:
+        - in: path
+          name: dailyId
+          required: true
+          schema:
+            type: integer
+          description: The ID of the daily task to complete
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Daily completed successfully, experience awarded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  exp:
+                    type: integer
+        '400':
+          description: Daily already completed
+        '404':
+          description: Daily not found
+        '500':
+          description: Server error
+  /api/dailies/uncompleted:
+    get:
+      tags:
+        - Dailies
+      summary: Retrieve all uncompleted dailies for a user
+      description: Returns a list of all uncompleted dailies associated with the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of uncompleted dailies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Daily'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error  
   /api/dailies/{dailyId}/complete:
     post:
       tags:
@@ -192,6 +382,62 @@ paths:
           description: Daily task not found.
         '500':
           description: Internal Server Error.
+  /api/items:
+    get:
+      tags:
+        - Items
+      summary: Retrieve all items with ownership status
+      description: Returns a list of all items along with a flag indicating whether the user owns each item.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of items with ownership status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    coin:
+                      type: integer
+                    type:
+                      type: string
+                    owned:
+                      type: boolean
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /api/items/{itemId}/purchase:
+    post:
+      tags:
+        - Items
+      summary: Purchase an item
+      description: Allows a user to purchase an item if they have enough coins. Deducts the item's cost from the user's coins and adds the item to the user's inventory.
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: integer
+          description: The ID of the item to purchase
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Item purchased successfully
+        '400':
+          description: Not enough coins or other client error
+        '404':
+          description: Item not found
+        '500':
+          description: Server error
 components:
   securitySchemes:
     bearerAuth:

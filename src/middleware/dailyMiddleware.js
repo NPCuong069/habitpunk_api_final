@@ -1,32 +1,50 @@
-const db = require('../models/dailyModel');
-const userModel = require('../models/userModel');
+const { createDaily, getUncompletedDailiesByUser } = require('../models/dailyModel');
+const { updateExperience, updateUserHealthMana } = require('../models/userModel');
 
-const completeDailyTask = async (req, res) => {
-  const { dailyId } = req.params;
+exports.createDaily = async (req, res) => {
+  const { title, note, difficulty } = req.body;
+  const userId = req.user.uid;  // Assuming you're extracting the user ID from authenticated user data
   try {
-    const daily = await db.getDailyById(dailyId);
-    if (!daily) {
-      return res.status(404).send('Daily task not found');
-    }
-    if (daily.ischeck) {
-      return res.status(400).send('Task already completed');
-    }
-
-    const updatedDaily = await db.updateDaily(dailyId, {
-      ischeck: true,
-      clicks: daily.clicks + 1
-    });
-
-    const expToAdd = daily.difficulty * 10;
-    await userModel.addExperience(daily.user_id, expToAdd);
-
-    res.status(200).json(updatedDaily);
+    const daily = await createDaily(title, note, difficulty, userId);
+    res.status(201).json(daily);
   } catch (error) {
-    console.error('Error completing daily task:', error);
-    res.status(500).send('Internal Server Error');
+    console.error('Error creating daily:', error);
+    res.status(500).send({ message: "Failed to create daily", error: error.message });
   }
 };
+exports.getUncompletedDailies = async (req, res) => {
+  const userId = req.user.uid; // As above
+  try {
+    const dailies = await getUncompletedDailiesByUser(userId);
+    res.json(dailies);
+  } catch (error) {
+    console.error('Error retrieving dailies:', error);
+    res.status(500).send({ message: "Failed to retrieve dailies", error: error.message });
+  }
+};
+exports.performDailyAction = async (req, res) => {
+  const { dailyId } = req.params;
+  const userId = req.user.uid;  // Extracted from authenticated user data
 
-module.exports = {
-  completeDailyTask
+  try {
+    const daily = await getDailyById(dailyId);
+    if (!daily) {
+      return res.status(404).send({ message: "Daily not found" });
+    }
+    if (daily.isCheck) {
+      return res.status(400).send({ message: "Daily already completed" });
+    }
+
+    // Update the daily as checked
+    await updateDaily(dailyId, { isCheck: true });
+
+    // Update user experience
+    const expGain = daily.difficulty * 10;
+    await updateExperience(userId, expGain);
+
+    res.status(200).send({ message: "Daily completed, experience gained", exp: expGain });
+  } catch (error) {
+    console.error('Error performing daily action:', error);
+    res.status(500).send({ message: "Failed to perform daily action", error: error.message });
+  }
 };

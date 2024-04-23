@@ -11,8 +11,8 @@ exports.up = function(knex) {
       table.timestamp('created_at').defaultTo(knex.fn.now());
       table.integer('pos_clicks');
       table.integer('neg_clicks');
-      table.integer('user_id').unsigned();
-      table.foreign('user_id').references('id').inTable('users');
+      table.string('user_id').unsigned();
+      table.foreign('user_id').references('firebase_uid').inTable('users');
     });
   };
   

@@ -6,7 +6,7 @@ exports.up = function(knex) {
       table.integer('difficulty');
       table.timestamp('created_at').defaultTo(knex.fn.now());
       table.integer('clicks').defaultTo(0);
-      table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE');
+      table.string('user_id').unsigned().references('firebase_uid').inTable('users').onDelete('CASCADE');
       table.boolean('ischeck').defaultTo(false);
     });
   };

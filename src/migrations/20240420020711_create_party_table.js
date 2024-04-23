@@ -1,7 +1,7 @@
 exports.up = function(knex) {
     return knex.schema.createTable('party', function(table) {
       table.increments('id').primary();
-      table.integer('leader_id').unsigned().references('id').inTable('users').onDelete('SET NULL');
+      table.string('leader_id').unsigned().references('firebase_uid').inTable('users').onDelete('SET NULL');
       table.string('name').notNullable();
     });
   };
