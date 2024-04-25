@@ -1,5 +1,5 @@
-const { createDaily, getUncompletedDailiesByUser } = require('../models/dailyModel');
-const { updateExperience, updateUserHealthMana } = require('../models/userModel');
+const { createDaily, getUncompletedDailiesByUser, getDailyById, updateDaily,  } = require('../models/dailyModel');
+const { updateExperience, updateUserHealthMana } = require('../middleware/userMiddleware');
 
 exports.createDaily = async (req, res) => {
   const { title, note, difficulty } = req.body;
@@ -36,7 +36,7 @@ exports.performDailyAction = async (req, res) => {
     }
 
     // Update the daily as checked
-    await updateDaily(dailyId, { isCheck: true });
+    await updateDaily(dailyId, { ischeck: true });
 
     // Update user experience
     const expGain = daily.difficulty * 10;

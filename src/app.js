@@ -5,6 +5,7 @@ const userRoutes = require('./api/userApi');
 const habitRoutes = require('./api/habitApi');
 const dailyRoutes = require('./api/dailyApi');
 const itemRoutes = require('./api/itemApi');
+const notificationRoutes = require('./api/notificationApi');
 const cors = require('cors');
 
 const app = express();
@@ -22,6 +23,7 @@ app.use('/api',userRoutes);
 app.use('/api',habitRoutes);
 app.use('/api',dailyRoutes);
 app.use('/api',itemRoutes);
+app.use('/api', notificationRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

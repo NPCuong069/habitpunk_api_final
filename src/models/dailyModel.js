@@ -4,10 +4,10 @@ const getDailyById = (dailyId) => {
   return db('dailies').where({ id: dailyId }).first();
 };
 const getUncompletedDailiesByUser = (userId) => {
-  return db('dailies').where({ user_id: userId, ischeck: false }).select('*');
+  return db('dailies').select('*');
 };
 const updateDaily = (dailyId, updates) => {
-  return db('dailies').where({ id: dailyId }).update(updates).returning('*');
+  return db('dailies').where({ id: dailyId }).update(updates).increment('clicks',1).returning('*');
 };
 const createDaily = async (title, note, difficulty, userId) => {
   try {

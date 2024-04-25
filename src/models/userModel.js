@@ -15,18 +15,40 @@ const addExperience = async (userId, expToAdd) => {
     const newExp = user.xp + expToAdd;
     await db('users').where({ id: userId }).update({ xp: newExp });
 };
+const updateUserHealthMana = async (userId, hpChange, enChange) => {
+    return db('users')
+      .where({ firebase_uid: userId })
+      .increment('hp', hpChange)
+      .increment('en', enChange);
+};
 const checkUsernameExists = async (username) => {
     const result = await db('users').where({ username }).first();
     return !!result; // Return true if the user exists, otherwise false
 };
 const getUserById = (userId) => {
-    return db('users').where({ id: userId }).first();
+    return db('users').where({ firebase_uid: userId }).first();
 };
 
 const updateUser = (userId, updates) => {
-    return db('users').where({ id: userId }).update(updates).returning('*');
+    return db('users').where({ firebase_uid: userId }).update(updates).returning('*');
 };
+const updateExperience = async (userId, expToAdd) => {
+    const user = await getUserById(userId);
+    if (!user) throw new Error('User not found');
 
+    let newExp = user.xp + expToAdd;
+    let newLevel = user.lvl;
+    const maxExp = user.lvl * 100;
+    const maxHp = user.lvl * 50;
+    // Check if the new experience reaches or exceeds the level-up threshold
+    while (newExp >= maxExp) {
+        newExp -= maxExp;  // Reduce current experience by the max threshold
+        newLevel++;        // Increment the level
+    }
+
+    await updateUser(userId, { xp: newExp, lvl: newLevel, hp: maxHp, en: 100 });
+    return { newExp, newLevel };  // Optionally return new values for confirmation/testing
+};
 module.exports = {
     getAllUsers,
     getUserById,
@@ -34,5 +56,7 @@ module.exports = {
     addExperience,
     getUserByFirebaseUid,
     createUser,
-    checkUsernameExists
+    checkUsernameExists,
+    updateUserHealthMana,
+    updateExperience
 };

@@ -12,26 +12,13 @@ const getAllUsersHandler = async (req, res) => {
   }
 };
 const updateExperience = async (userId, expToAdd) => {
-  const user = await db('users').where({ firebase_uid: userId }).first();
-  if (!user) throw new Error('User not found');
-
-  let newExp = user.xp + expToAdd;
-  let newLevel = user.lvl;
-  const maxExp = user.lvl * 100;
-
-  // Check if the new experience reaches or exceeds the level-up threshold
-  while (newExp >= maxExp) {
-      newExp -= maxExp;  // Reduce current experience by the max threshold
-      newLevel++;         // Increment the level
-  }
-
-  // Update user with new experience and level
-  await db('users').where({ firebase_uid: userId }).update({
-      xp: newExp,
-      lvl: newLevel
-  });
-
-  return { newExp, newLevel };  // Optionally return new values for confirmation/testing
+  try {
+    const result = await userModel.updateExperience(userId, expToAdd);
+    return result; // Return the result to the caller, or handle as needed
+  } catch (error) {
+    console.error('Error updating user experience:', error);
+    throw error; // Re-throw or handle error appropriately
+  }// Optionally return new values for confirmation/testing
 };
 
 exports.updateUserHealthMana = async (userId, hpChange, enChange) => {
