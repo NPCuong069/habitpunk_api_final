@@ -49,7 +49,7 @@ const verifyAndCreateUser = async (req, res, next) => {
   }
 };
 const updateUserEquipment = async (req, res) => {
-  const firebaseUid = req.user.uid; 
+  const firebaseUid = req.user.uid;
   const { itemId } = req.body; // Get only itemId from request body
 
   if (!itemId) {
@@ -63,17 +63,21 @@ const updateUserEquipment = async (req, res) => {
       return res.status(404).send({ message: "Item not found." });
     }
 
-    const itemType = item.type; // Get the type of the item ('hat', 'costume', etc.)
-    const fieldName = `${itemType}_id`; // Construct the field name dynamically based on itemType
+    const itemType = item.type;
+    const sanitizedType = itemType.trim().replace(/\s+/g, '');
+    const fieldName = `${sanitizedType}_id`; // Get the type of the item ('hat', 'costume', etc.)
 
     // Ensure the field exists on the user model
     if (!['hat_id', 'costume_id', 'facial_id', 'weapon_id', 'background_id', 'pet_id', 'cape_id', 'chip_id'].includes(fieldName)) {
-      return res.status(400).send({ message: "Invalid item type specified." });
+      console.log(fieldName);
+
+      return res.status(400).send({ message: "Invalid item type specified.: " + fieldName });
     }
 
     // Update the user's equipment
     const updatedUser = await userModel.updateUserField(firebaseUid, fieldName, itemId);
     if (updatedUser) {
+      console.log(fieldName);
       res.status(200).json({ message: "Item equipped successfully.", user: updatedUser });
     } else {
       res.status(404).send({ message: "User not found." });
