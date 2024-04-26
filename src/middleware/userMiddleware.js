@@ -2,6 +2,7 @@ const { getAllUsers, getUserByFirebaseUid, updateUser, createUser } = require('.
 const generateNickname = require('../utils/generateNickname');
 const admin = require('firebase-admin');
 const userModel = require('../models/userModel');
+const itemModel = require('../models/itemModel');
 
 const getAllUsersHandler = async (req, res) => {
   try {
@@ -45,6 +46,41 @@ const verifyAndCreateUser = async (req, res, next) => {
   } catch (error) {
     console.error('Error verifying Firebase ID token:', error);
     res.status(403).send('Unauthorized');
+  }
+};
+const updateUserEquipment = async (req, res) => {
+  const firebaseUid = req.user.uid; 
+  const { itemId } = req.body; // Get only itemId from request body
+
+  if (!itemId) {
+    return res.status(400).send({ message: "Missing item ID." });
+  }
+
+  try {
+    // Find the item by ID to get its type
+    const item = await itemModel.getItemById(itemId);
+    if (!item) {
+      return res.status(404).send({ message: "Item not found." });
+    }
+
+    const itemType = item.type; // Get the type of the item ('hat', 'costume', etc.)
+    const fieldName = `${itemType}_id`; // Construct the field name dynamically based on itemType
+
+    // Ensure the field exists on the user model
+    if (!['hat_id', 'costume_id', 'facial_id', 'weapon_id', 'background_id', 'pet_id', 'cape_id', 'chip_id'].includes(fieldName)) {
+      return res.status(400).send({ message: "Invalid item type specified." });
+    }
+
+    // Update the user's equipment
+    const updatedUser = await userModel.updateUserField(firebaseUid, fieldName, itemId);
+    if (updatedUser) {
+      res.status(200).json({ message: "Item equipped successfully.", user: updatedUser });
+    } else {
+      res.status(404).send({ message: "User not found." });
+    }
+  } catch (error) {
+    console.error('Error equipping item:', error);
+    res.status(500).send({ message: "Internal server error" });
   }
 };
 const getUserInfo = async (req, res) => {
@@ -115,5 +151,6 @@ module.exports = {
   updateExperience,
   loginUserOrCreate,
   getUserInfo,
-  updateExperience
+  updateExperience,
+  updateUserEquipment
 };

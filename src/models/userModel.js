@@ -28,7 +28,23 @@ const checkUsernameExists = async (username) => {
 const getUserById = (userId) => {
     return db('users').where({ firebase_uid: userId }).first();
 };
+const equipItem = async (userId, itemId, itemType) => {
+    const columnToUpdate = `${itemType}_id`; // For example: 'hat_id'
+    const updateObject = {};
+    updateObject[columnToUpdate] = itemId;
 
+    await db('users').where({ id: userId }).update(updateObject);
+    return getUserById(userId); // Assuming you have a function to fetch user by ID
+};
+
+const updateUserField = async (firebase_uid, fieldName, fieldValue) => {
+    const result = await db('users')
+      .where({ firebase_uid })
+      .update({ [fieldName]: fieldValue })
+      .returning('*'); // Return all fields of the updated user
+  
+    return result[0]; // Return the updated user object
+  };
 const updateUser = (userId, updates) => {
     return db('users').where({ firebase_uid: userId }).update(updates).returning('*');
 };
@@ -58,5 +74,7 @@ module.exports = {
     createUser,
     checkUsernameExists,
     updateUserHealthMana,
-    updateExperience
+    updateExperience,
+    updateUserField,
+    equipItem
 };
