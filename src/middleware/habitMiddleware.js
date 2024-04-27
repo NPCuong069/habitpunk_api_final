@@ -1,4 +1,4 @@
-const { createHabit, getAllHabitsByUser } = require('../models/habitModel');
+const { createHabit, getAllHabitsByUser, update, getHabitById, updateHabit } = require('../models/habitModel');
 const { updateExperience, updateUserHealthMana } = require('../models/userModel');
 
 exports.createHabit = async (req, res) => {
@@ -22,28 +22,54 @@ exports.getAllHabits = async (req, res) => {
         res.status(500).send({ message: "Failed to retrieve habits", error: error.message });
     }
 };
-exports.performHabitAction = async (req, res) => {
+exports.updateHabitDescription = async (req, res) => {
     const { habitId } = req.params;
-    const { action } = req.body; // 'positive' or 'negative'
-    const userId = req.user.uid;
+    const { description } = req.body;
+    
+    try {
+      // First, check if the daily exists
+      const habit = await getHabitById(habitId);
+      if (!habit) {
+        return res.status(404).send({ message: "Habit not found" });
+      }
+  
+      // Update the daily's description
+      const updateHabit = await updateHabit(habitId, { note: description });
+  
+      res.status(200).json(updateHabit);
+    } catch (error) {
+      console.error('Error updating habit description:', error);
+      res.status(500).send({ message: "Failed to update habit description", error: error.message });
+    }
+  };
+
+  exports.performHabitAction = async (req, res) => {
+    const { habitId } = req.params;
+    const { action } = req.body; // Action can be 'positive' or 'negative'
 
     try {
-        const habit = await db('habits').where({ id: habitId }).first();
+        // First, check if the habit exists
+        const habit = await getHabitById(habitId);
         if (!habit) {
+               console.log("fail");
             return res.status(404).send({ message: "Habit not found" });
+         
         }
 
+        let updates = {};
         if (action === 'positive') {
-            const expGain = habit.difficulty * 10;
-            await updateExperience(userId, expGain);
-            res.status(200).send({ message: "Experience gained", amount: expGain });
+            updates = { pos_clicks: habit.pos_clicks + 1 };
+            console.log("success");
         } else if (action === 'negative') {
-            const loss = habit.difficulty;
-            await updateUserHealthMana(userId, -loss, -loss);
-            res.status(200).send({ message: "Health and mana reduced", amount: loss });
+            updates = { neg_clicks: habit.neg_clicks + 1 };
+            console.log("success");
         } else {
-            res.status(400).send({ message: "Invalid action specified" });
+            console.log("fail");
+            return res.status(400).send({ message: "Invalid action" });
         }
+        const updatedHabit = await updateHabit(habitId, updates);
+
+        res.status(200).json(updatedHabit);
     } catch (error) {
         console.error('Error performing habit action:', error);
         res.status(500).send({ message: "Failed to perform habit action", error: error.message });

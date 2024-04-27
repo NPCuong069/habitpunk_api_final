@@ -7,6 +7,9 @@ const getUncompletedDailiesByUser = (userId) => {
   return db('dailies').select('*');
 };
 const updateDaily = (dailyId, updates) => {
+  return db('dailies').where({ id: dailyId }).update(updates).returning('*');
+};
+const completeDaily = (dailyId, updates) => {
   return db('dailies').where({ id: dailyId }).update(updates).increment('clicks',1).returning('*');
 };
 const createDaily = async (title, note, difficulty, userId) => {
@@ -31,5 +34,6 @@ module.exports = {
   getDailyById,
   updateDaily,
   createDaily,
-  getUncompletedDailiesByUser
+  getUncompletedDailiesByUser,
+  completeDaily
 };

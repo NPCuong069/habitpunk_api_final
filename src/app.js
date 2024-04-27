@@ -12,6 +12,7 @@ const app = express();
 
 // Load Swagger document as a JS object
 const swaggerDocument = YAML.load('./src/swagger.yaml'); // Make sure the path is correct
+const notificationCron = require('./cron/notificationCron');
 app.use(cors());
 app.use(express.json());
 
@@ -24,6 +25,7 @@ app.use('/api',habitRoutes);
 app.use('/api',dailyRoutes);
 app.use('/api',itemRoutes);
 app.use('/api', notificationRoutes);
+notificationCron.startCronJob();
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

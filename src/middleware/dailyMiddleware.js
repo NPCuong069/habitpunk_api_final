@@ -1,4 +1,4 @@
-const { createDaily, getUncompletedDailiesByUser, getDailyById, updateDaily,  } = require('../models/dailyModel');
+const { createDaily, getUncompletedDailiesByUser, getDailyById, updateDaily, completeDaily,  } = require('../models/dailyModel');
 const { updateExperience, updateUserHealthMana } = require('../middleware/userMiddleware');
 
 exports.createDaily = async (req, res) => {
@@ -22,6 +22,25 @@ exports.getUncompletedDailies = async (req, res) => {
     res.status(500).send({ message: "Failed to retrieve dailies", error: error.message });
   }
 };
+exports.updateDailyNote = async (req, res) => {
+  const { dailyId } = req.params;
+  const { note } = req.body;
+  
+  try {
+    // First, check if the daily exists
+    const daily = await getDailyById(dailyId);
+    if (!daily) {
+      return res.status(404).send({ message: "Daily not found" });
+    }
+
+    const updatedDaily = await updateDaily(dailyId, { note: note });
+
+    res.status(200).json(updatedDaily);
+  } catch (error) {
+    console.error('Error updating daily note:', error);
+    res.status(500).send({ message: "Failed to update daily note", error: error.message });
+  }
+};
 exports.performDailyAction = async (req, res) => {
   const { dailyId } = req.params;
   const userId = req.user.uid;  // Extracted from authenticated user data
@@ -36,7 +55,7 @@ exports.performDailyAction = async (req, res) => {
     }
 
     // Update the daily as checked
-    await updateDaily(dailyId, { ischeck: true });
+    await completeDaily(dailyId, { ischeck: true });
 
     // Update user experience
     const expGain = daily.difficulty * 10;

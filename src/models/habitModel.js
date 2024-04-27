@@ -3,6 +3,12 @@ const db = require('../config/database');
 const getAllHabitsByUser = (userId) => {
     return db('habits').where({ user_id: userId }).select('*');
 };
+const getHabitById = (habitId) => {
+    return db('habits').where({ id: habitId }).first();
+  };
+const updateHabit = (habitId, updates) => {
+    return db('habits').where({ id: habitId }).update(updates).returning('*');
+  };
 
 const createHabit = async (title, note, difficulty, userId) => {
     try {
@@ -25,6 +31,8 @@ const createHabit = async (title, note, difficulty, userId) => {
 };
 module.exports = {
     createHabit,
-    getAllHabitsByUser
+    getAllHabitsByUser,
+    updateHabit,
+    getHabitById
   };
   
