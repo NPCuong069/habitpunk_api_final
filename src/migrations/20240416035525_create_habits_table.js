@@ -13,6 +13,7 @@ exports.up = function(knex) {
       table.integer('neg_clicks');
       table.string('user_id').unsigned();
       table.foreign('user_id').references('firebase_uid').inTable('users');
+      table.boolean('is_deleted').defaultTo(false);
     });
   };
   

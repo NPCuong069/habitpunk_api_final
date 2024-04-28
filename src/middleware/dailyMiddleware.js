@@ -1,5 +1,6 @@
 const { createDaily, getUncompletedDailiesByUser, getDailyById, updateDaily, completeDaily,  } = require('../models/dailyModel');
 const { updateExperience, updateUserHealthMana } = require('../middleware/userMiddleware');
+const { updateCoins } = require('../models/userModel');
 
 exports.createDaily = async (req, res) => {
   const { title, note, difficulty } = req.body;
@@ -41,6 +42,23 @@ exports.updateDailyNote = async (req, res) => {
     res.status(500).send({ message: "Failed to update daily note", error: error.message });
   }
 };
+exports.deleteDaily = async (req, res) => {
+  const { dailyId } = req.params;
+
+  try {
+    const daily = await getDailyById(dailyId);
+    if (!daily) {
+      return res.status(404).send({ message: "Daily not found" });
+    }
+
+    await deleteDaily(dailyId);
+
+    res.status(200).send({ message: "Daily deleted successfully" });
+  } catch (error) {
+    console.error('Error deleting daily:', error);
+    res.status(500).send({ message: "Failed to delete daily", error: error.message });
+  }
+};
 exports.performDailyAction = async (req, res) => {
   const { dailyId } = req.params;
   const userId = req.user.uid;  // Extracted from authenticated user data
@@ -58,10 +76,14 @@ exports.performDailyAction = async (req, res) => {
     await completeDaily(dailyId, { ischeck: true });
 
     // Update user experience
-    const expGain = daily.difficulty * 10;
+    const expGain = (daily.difficulty + 1) * 10;
     await updateExperience(userId, expGain);
 
-    res.status(200).send({ message: "Daily completed, experience gained", exp: expGain });
+    // Update user coins
+    const coinGain = daily.difficulty + 1;
+    await updateCoins(userId, coinGain);  // This assumes you have a function to update coins
+
+    res.status(200).send({ message: "Daily completed, experience and coins gained", exp: expGain, coins: coinGain });
   } catch (error) {
     console.error('Error performing daily action:', error);
     res.status(500).send({ message: "Failed to perform daily action", error: error.message });

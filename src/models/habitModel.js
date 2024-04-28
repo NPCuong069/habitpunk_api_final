@@ -5,11 +5,13 @@ const getAllHabitsByUser = (userId) => {
 };
 const getHabitById = (habitId) => {
     return db('habits').where({ id: habitId }).first();
-  };
+};
 const updateHabit = (habitId, updates) => {
     return db('habits').where({ id: habitId }).update(updates).returning('*');
-  };
-
+};
+const deleteHabit = (habitId) => {
+    return db('habits').where({ id: habitId }).update({ is_deleted: true });
+};
 const createHabit = async (title, note, difficulty, userId) => {
     try {
         // Specify each column explicitly with correct data types
@@ -33,6 +35,6 @@ module.exports = {
     createHabit,
     getAllHabitsByUser,
     updateHabit,
-    getHabitById
-  };
-  
+    getHabitById,
+    deleteHabit
+};

@@ -12,6 +12,23 @@ exports.createHabit = async (req, res) => {
         res.status(500).send({ message: "Failed to create habit", error: error.message });
     }
 };
+exports.deleteHabit = async (req, res) => {
+    const { habitId } = req.params;
+  
+    try {
+      const habit = await getHabitById(habitId);
+      if (!habit) {
+        return res.status(404).send({ message: "Habit not found" });
+      }
+  
+      await deleteHabit(habitId);
+  
+      res.status(200).send({ message: "Habit deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting habit:', error);
+      res.status(500).send({ message: "Failed to delete habit", error: error.message });
+    }
+  };
 exports.getAllHabits = async (req, res) => {
     const userId = req.user.uid; // Assuming 'uid' is stored in req.user when authenticated
     try {

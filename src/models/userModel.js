@@ -36,7 +36,11 @@ const equipItem = async (userId, itemId, itemType) => {
     await db('users').where({ id: userId }).update(updateObject);
     return getUserById(userId); // Assuming you have a function to fetch user by ID
 };
-
+const updateCoins = async (userId, coinsToAdd) => {
+    const user = await db('users').where({ firebase_uid: userId }).first();
+    const newCoinBalance = user.coin + coinsToAdd;
+    await db('users').where({ firebase_uid: userId }).update({ coin: newCoinBalance });
+};
 const updateUserField = async (firebase_uid, fieldName, fieldValue) => {
     const result = await db('users')
       .where({ firebase_uid })
@@ -76,5 +80,6 @@ module.exports = {
     updateUserHealthMana,
     updateExperience,
     updateUserField,
-    equipItem
+    equipItem,
+    updateCoins
 };

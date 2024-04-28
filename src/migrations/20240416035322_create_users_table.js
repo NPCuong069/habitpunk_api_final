@@ -19,6 +19,7 @@ exports.up = function(knex) {
     table.integer('cape_id').nullable();
     table.integer('chip_id').nullable();
     table.timestamp('login_time').nullable();
+    table.timestamp('subscription_date').defaultTo('1999-01-01');
   });
 };
 

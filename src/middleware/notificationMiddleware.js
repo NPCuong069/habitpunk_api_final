@@ -1,7 +1,8 @@
 // middleware/notificationMiddleware.js
 const cron = require('node-cron');
-const { getPendingNotifications, updateNotificationStatus, getNotificationsToBeSent, createNotification } = require('../models/notificationModel');
+const { getPendingNotifications, updateNotificationStatus, getNotificationsToBeSent, createNotification, getNotificationsByDailyId, getNotificationById } = require('../models/notificationModel');
 const admin = require('../config/firebaseAdminInit');
+const { getDailyById } = require('../models/dailyModel');
 
 exports.addNewNotification = async (req, res) => {
   const {  device_type, content, daily_id, scheduled_time } = req.body;
@@ -49,5 +50,39 @@ const sendNotification = async (notification) => {
     console.log('Successfully sent message:', response);
   } catch (error) {
     console.error('Failed to send notification:', error);
+  }
+};
+exports.deleteNotification = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Check if the notification exists
+    const notification = await getNotificationById(id);
+    if (!notification) {
+      return res.status(404).send({ message: "Notification not found" });
+    }
+
+    // Delete the notification
+    await this.deleteNotification(id);
+
+    res.status(200).send({ message: "Notification deleted successfully" });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    res.status(500).send({ message: "Failed to delete notification", error: error.message });
+  }
+};
+exports.getNotificationsByDaily = async (req, res) => {
+  const { daily_id } = req.params;
+
+  if (!daily_id) {
+    return res.status(400).json({ message: 'Daily ID must be provided' });
+  }
+
+  try {
+    const notifications = await getNotificationsByDailyId(daily_id);
+    res.json(notifications);
+  } catch (error) {
+    console.error('Error retrieving notifications:', error);
+    res.status(500).json({ message: "Failed to retrieve notifications", error: error.message });
   }
 };

@@ -15,7 +15,13 @@ const getNotificationsToBeSent = () => {
 const createNotification = async (notification) => {
   return db('notifications').insert(notification).returning('*');
 };
-
+const getNotificationsByDailyId = async (dailyId) => {
+  try {
+    return await db('notifications').where({ daily_id: dailyId });
+  } catch (error) {
+    throw new Error('Failed to retrieve notifications: ' + error.message);
+  }
+};
 const getPendingNotifications = async () => {
   return db('notifications')
     .where('status', false)
@@ -39,5 +45,6 @@ module.exports = {
   updateNotificationStatus,
   deleteNotification,
   getNotificationById,
-  getNotificationsToBeSent
+  getNotificationsToBeSent,
+  getNotificationsByDailyId
 };

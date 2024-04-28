@@ -8,6 +8,7 @@ exports.up = function(knex) {
       table.integer('clicks').defaultTo(0);
       table.string('user_id').unsigned().references('firebase_uid').inTable('users').onDelete('CASCADE');
       table.boolean('ischeck').defaultTo(false);
+      table.boolean('is_deleted').defaultTo(false);
     });
   };
   
