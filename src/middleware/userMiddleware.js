@@ -1,4 +1,4 @@
-const { getAllUsers, getUserByFirebaseUid, updateUser, createUser } = require('../models/userModel');
+const { getAllUsers, getUserByFirebaseUid, updateUser, createUser, leaveParty } = require('../models/userModel');
 const generateNickname = require('../utils/generateNickname');
 const admin = require('firebase-admin');
 const userModel = require('../models/userModel');
@@ -101,7 +101,20 @@ const getUserInfo = async (req, res) => {
     res.status(500).send('Internal server error');
   }
 };
+const leavePartyHandler = async (req, res) => {
+  const firebaseUid = req.user.uid; // UID from decoded Firebase token
 
+  try {
+      const updatedUser = await leaveParty(firebaseUid);
+      if (!updatedUser) {
+          return res.status(404).send({ message: 'User not found or already not in any party' });
+      }
+      res.status(200).json({ message: "Successfully left the party", user: updatedUser });
+  } catch (error) {
+      console.error('Error leaving party:', error);
+      res.status(500).send({ message: "Internal server error while attempting to leave the party" });
+  }
+};
 const loginUserOrCreate = async (req, res) => {
   const { token } = req.body;
   if (!token) {
@@ -156,5 +169,6 @@ module.exports = {
   loginUserOrCreate,
   getUserInfo,
   updateExperience,
-  updateUserEquipment
+  updateUserEquipment,
+  leavePartyHandler
 };

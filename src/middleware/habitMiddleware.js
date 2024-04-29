@@ -1,4 +1,4 @@
-const { createHabit, getAllHabitsByUser, update, getHabitById, updateHabit } = require('../models/habitModel');
+const { createHabit, getAllHabitsByUser, update, getHabitById, updateHabit, deleteHabit } = require('../models/habitModel');
 const { updateExperience, updateUserHealthMana } = require('../models/userModel');
 
 exports.createHabit = async (req, res) => {
@@ -70,9 +70,7 @@ exports.updateHabitDescription = async (req, res) => {
         if (!habit) {
                console.log("fail");
             return res.status(404).send({ message: "Habit not found" });
-         
         }
-
         let updates = {};
         if (action === 'positive') {
             updates = { pos_clicks: habit.pos_clicks + 1 };

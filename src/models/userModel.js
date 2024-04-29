@@ -22,11 +22,15 @@ const updateUserHealthMana = async (userId, hpChange, enChange) => {
       .increment('en', enChange);
 };
 const checkUsernameExists = async (username) => {
-    const result = await db('users').where({ username }).first();
-    return !!result; // Return true if the user exists, otherwise false
+    const user = await db('users').where({ username }).first();
+    return user;  // Return the full user object instead of a boolean
 };
 const getUserById = (userId) => {
     return db('users').where({ firebase_uid: userId }).first();
+};
+const getUserPartyIdByFirebaseUid = async (firebaseUid) => {
+    const user = await db('users').where({ firebase_uid: firebaseUid }).first();
+    return user ? user.party_id : null;
 };
 const equipItem = async (userId, itemId, itemType) => {
     const columnToUpdate = `${itemType}_id`; // For example: 'hat_id'
@@ -69,6 +73,13 @@ const updateExperience = async (userId, expToAdd) => {
     await updateUser(userId, { xp: newExp, lvl: newLevel, hp: maxHp, en: 100 });
     return { newExp, newLevel };  // Optionally return new values for confirmation/testing
 };
+const leaveParty = async (firebaseUid) => {
+    const result = await db('users')
+        .where({ firebase_uid: firebaseUid })
+        .update({ party_id: null })
+        .returning('*'); // Return all fields of the updated user for confirmation
+    return result[0]; // Return the updated user object
+};
 module.exports = {
     getAllUsers,
     getUserById,
@@ -81,5 +92,7 @@ module.exports = {
     updateExperience,
     updateUserField,
     equipItem,
-    updateCoins
+    leaveParty,
+    updateCoins,
+    getUserPartyIdByFirebaseUid
 };

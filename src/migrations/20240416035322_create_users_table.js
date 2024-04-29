@@ -20,6 +20,7 @@ exports.up = function(knex) {
     table.integer('chip_id').nullable();
     table.timestamp('login_time').nullable();
     table.timestamp('subscription_date').defaultTo('1999-01-01');
+    table.int('party_id').unsigned().nullable().references('id').inTable('party').onDelete('CASCADE');
   });
 };
 
