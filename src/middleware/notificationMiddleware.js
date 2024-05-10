@@ -1,6 +1,6 @@
 // middleware/notificationMiddleware.js
 const cron = require('node-cron');
-const { getPendingNotifications, updateNotificationStatus, getNotificationsToBeSent, createNotification, getNotificationsByDailyId, getNotificationById } = require('../models/notificationModel');
+const { getPendingNotifications, updateNotificationStatus, getNotificationsToBeSent, createNotification, getNotificationsByDailyId, getNotificationById, deleteNotification } = require('../models/notificationModel');
 const admin = require('../config/firebaseAdminInit');
 const { getDailyById } = require('../models/dailyModel');
 
@@ -54,7 +54,7 @@ const sendNotification = async (notification) => {
 };
 exports.deleteNotification = async (req, res) => {
   const { id } = req.params;
-
+  console.log(req.params);
   try {
     // Check if the notification exists
     const notification = await getNotificationById(id);
@@ -63,7 +63,7 @@ exports.deleteNotification = async (req, res) => {
     }
 
     // Delete the notification
-    await this.deleteNotification(id);
+    await deleteNotification(id);
 
     res.status(200).send({ message: "Notification deleted successfully" });
   } catch (error) {

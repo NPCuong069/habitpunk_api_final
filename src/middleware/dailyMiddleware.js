@@ -1,11 +1,19 @@
-const { createDaily, getUncompletedDailiesByUser, getDailyById, updateDaily, completeDaily,  } = require('../models/dailyModel');
-const { updateExperience, updateUserHealthMana } = require('../middleware/userMiddleware');
+const { createDaily, getDailyById, updateDaily, completeDaily, countDailiesByUser, deleteDaily, getDailiesByUser } = require('../models/dailyModel');
+const { updateExperience } = require('../middleware/userMiddleware');
 const { updateCoins } = require('../models/userModel');
+const { getTodaysCoins, logCoinChange } = require('../models/userCoinsLogModel');
 
 exports.createDaily = async (req, res) => {
   const { title, note, difficulty } = req.body;
-  const userId = req.user.uid;  // Assuming you're extracting the user ID from authenticated user data
+  const userId = req.user.uid; // Assuming you're extracting the user ID from authenticated user data
+
   try {
+    // Check the current count of dailies
+    const dailyCount = await countDailiesByUser(userId);
+    if (dailyCount >= 4) {
+      return res.status(429).send({ message: "Maximum of 4 uncompleted dailies allowed" });
+    }
+
     const daily = await createDaily(title, note, difficulty, userId);
     res.status(201).json(daily);
   } catch (error) {
@@ -13,20 +21,22 @@ exports.createDaily = async (req, res) => {
     res.status(500).send({ message: "Failed to create daily", error: error.message });
   }
 };
-exports.getUncompletedDailies = async (req, res) => {
+
+exports.getDailiesByUser = async (req, res) => {
   const userId = req.user.uid; // As above
   try {
-    const dailies = await getUncompletedDailiesByUser(userId);
+    const dailies = await getDailiesByUser(userId);
     res.json(dailies);
   } catch (error) {
     console.error('Error retrieving dailies:', error);
     res.status(500).send({ message: "Failed to retrieve dailies", error: error.message });
   }
 };
+
 exports.updateDailyNote = async (req, res) => {
   const { dailyId } = req.params;
   const { note } = req.body;
-  
+
   try {
     // First, check if the daily exists
     const daily = await getDailyById(dailyId);
@@ -61,7 +71,7 @@ exports.deleteDaily = async (req, res) => {
 };
 exports.performDailyAction = async (req, res) => {
   const { dailyId } = req.params;
-  const userId = req.user.uid;  // Extracted from authenticated user data
+  const userId = req.user.uid;
 
   try {
     const daily = await getDailyById(dailyId);
@@ -72,18 +82,20 @@ exports.performDailyAction = async (req, res) => {
       return res.status(400).send({ message: "Daily already completed" });
     }
 
-    // Update the daily as checked
     await completeDaily(dailyId, { ischeck: true });
 
     // Update user experience
     const expGain = (daily.difficulty + 1) * 10;
     await updateExperience(userId, expGain);
+    const todaysCoins = await getTodaysCoins(userId);
+    const potentialCoins = daily.difficulty + 1;
+    if (Number(todaysCoins) + potentialCoins > 50) {
+      return res.status(429).send({ message: "Daily coin limit reached for today" });
+    }
+    await updateCoins(userId, potentialCoins);
+    await logCoinChange(userId, potentialCoins, 'earned from daily');
 
-    // Update user coins
-    const coinGain = daily.difficulty + 1;
-    await updateCoins(userId, coinGain);  // This assumes you have a function to update coins
-
-    res.status(200).send({ message: "Daily completed, experience and coins gained", exp: expGain, coins: coinGain });
+    res.status(200).send({ message: "Daily completed, experience and coins gained", exp: expGain, coins: potentialCoins });
   } catch (error) {
     console.error('Error performing daily action:', error);
     res.status(500).send({ message: "Failed to perform daily action", error: error.message });

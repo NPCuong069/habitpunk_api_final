@@ -105,23 +105,24 @@ const leavePartyHandler = async (req, res) => {
   const firebaseUid = req.user.uid; // UID from decoded Firebase token
 
   try {
-      const updatedUser = await leaveParty(firebaseUid);
-      if (!updatedUser) {
-          return res.status(404).send({ message: 'User not found or already not in any party' });
-      }
-      res.status(200).json({ message: "Successfully left the party", user: updatedUser });
+    const updatedUser = await leaveParty(firebaseUid);
+    if (!updatedUser) {
+      return res.status(404).send({ message: 'User not found or already not in any party' });
+    }
+    res.status(200).json({ message: "Successfully left the party", user: updatedUser });
   } catch (error) {
-      console.error('Error leaving party:', error);
-      res.status(500).send({ message: "Internal server error while attempting to leave the party" });
+    console.error('Error leaving party:', error);
+    res.status(500).send({ message: "Internal server error while attempting to leave the party" });
   }
 };
-const loginUserOrCreate = async (req, res) => {
-  const { token } = req.body;
+const loginUserOrCreate = async (req, res, next) => {
+  const { token, deviceToken } = req.body;
   if (!token) {
     return res.status(400).send('Token is required.');
   }
 
   console.log("Token received:", token);
+  console.log("Token received:", deviceToken);
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
     const firebaseUid = decodedToken.uid;
@@ -151,15 +152,20 @@ const loginUserOrCreate = async (req, res) => {
       };
       user = await userModel.createUser(newUser);
       res.status(201).json({ message: "User created and logged in", user: user[0] });
+      next();
     } else {
       await userModel.updateUser(user.id, { login_time: new Date() });
       user = await userModel.getUserByFirebaseUid(firebaseUid); // Fetch the updated user info
       res.status(200).json({ message: "Login successful", user });
+      next();
     }
+    next();
   } catch (error) {
     console.error('Error during login or user creation:', error);
     res.status(403).send('Invalid token or server error');
+
   }
+  next();
 };
 
 module.exports = {

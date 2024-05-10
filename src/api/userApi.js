@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { loginUserOrCreate, getAllUsersHandler, verifyAndCreateUser, updateExperience, getUserInfo, updateUserEquipment, leavePartyHandler } = require('../middleware/userMiddleware');
 const { checkAuth } = require('../middleware/authMiddleware');
-const { completeDailyTask } = require('../middleware/dailyMiddleware');
+const { handleDeviceToken } = require('../middleware/deviceTokenMiddleware');
 
 router.get('/users', getAllUsersHandler);
 router.post('/user', verifyAndCreateUser);
 router.post('/user/:userId/experience', checkAuth, updateExperience);
-router.post('/login', loginUserOrCreate);
+router.post('/login', loginUserOrCreate, handleDeviceToken);
 router.get('/user/info', checkAuth, getUserInfo);
 router.post('/user/equip', checkAuth, updateUserEquipment);
 router.post('/user/leave-party', checkAuth, leavePartyHandler);
