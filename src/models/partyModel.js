@@ -49,10 +49,33 @@ const getPartyByUserId = async (userId) => {
     .first();
   return party;
 };
+const getUserParty = async (userId) => {
+  // Fetch the party_id for the user
+  const result = await db('users').where({ firebase_uid: userId }).select('party_id').first();
+  return result ? result.party_id : null;
+};
+
+const getActivePartyQuest = async (partyId) => {
+  // Fetch the active quest for the party
+  return db('party_quest')
+    .where({ party_id: partyId, status: 1 })
+    .first();
+};
+
+const decrementQuestHp = async (questId, hpDecrement) => {
+  // Decrement HP of the quest by the given amount
+  return db('party_quest')
+    .where({ id: questId })
+    .decrement('hp', hpDecrement);
+};
+
 module.exports = {
   createParty,
   getPartyById,
   getPartyMembers,
   getPartyByUserId,
-  getPartyDetailsWithQuestsByPartyId
+  getPartyDetailsWithQuestsByPartyId,
+  getUserParty,
+  getActivePartyQuest,
+  decrementQuestHp
 };

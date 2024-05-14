@@ -5,6 +5,8 @@ exports.up = function(knex) {
       table.text('content');
       table.string('user_id').unsigned().nullable().references('firebase_uid').inTable('users').onDelete('SET NULL');
       table.timestamp('time').defaultTo(knex.fn.now());
+      table.boolean('is_deleted').defaultTo(false); // Adding a column to flag if the message is deleted
+
     });
   };
   

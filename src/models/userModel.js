@@ -3,8 +3,19 @@ const db = require('../config/database'); // Ensure you have a database config f
 const getAllUsers = async () => {
     return await db.select('*').from('users');
 };
-const getUserByFirebaseUid = (firebaseUid) => {
-    return db('users').where({ firebase_uid: firebaseUid }).first();
+const getUserByFirebaseUid = async (firebaseUid) => {
+    return db('users')
+        .leftJoin('subscriptions', function() {
+            this.on('users.firebase_uid', '=', 'subscriptions.user_id')
+                .andOn('subscriptions.status', '=', db.raw("'active'"))
+                .andOn('subscriptions.end_date', '>=', db.raw('CURRENT_DATE'));
+        })
+        .select(
+            'users.*',
+            'subscriptions.end_date as subscription_end_date'
+        )
+        .where({ 'users.firebase_uid': firebaseUid })
+        .first();
 };
 
 const createUser = (userData) => {
@@ -56,6 +67,10 @@ const updateUserField = async (firebase_uid, fieldName, fieldValue) => {
 const updateUser = (userId, updates) => {
     return db('users').where({ firebase_uid: userId }).update(updates).returning('*');
 };
+const getUserLevel = async (userId) => {
+    const user = await db('users').where({ firebase_uid: userId }).select('lvl').first();
+    return user ? user.lvl : null;  // Return the user level or null if not found
+};
 const updateExperience = async (userId, expToAdd) => {
     const user = await getUserById(userId);
     if (!user) throw new Error('User not found');
@@ -94,5 +109,6 @@ module.exports = {
     equipItem,
     leaveParty,
     updateCoins,
+    getUserLevel,
     getUserPartyIdByFirebaseUid
 };

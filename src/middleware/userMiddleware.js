@@ -116,13 +116,12 @@ const leavePartyHandler = async (req, res) => {
   }
 };
 const loginUserOrCreate = async (req, res, next) => {
-  const { token, deviceToken } = req.body;
+  const { token } = req.body;
   if (!token) {
     return res.status(400).send('Token is required.');
   }
 
   console.log("Token received:", token);
-  console.log("Token received:", deviceToken);
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
     const firebaseUid = decodedToken.uid;

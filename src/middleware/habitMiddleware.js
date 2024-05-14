@@ -1,5 +1,5 @@
 const { createHabit, getAllHabitsByUser, update, getHabitById, updateHabit, deleteHabit } = require('../models/habitModel');
-const { getTodaysCoins, logCoinChange } = require('../models/userCoinsLogModel');
+const { getTodaysCoins, logCoinChange, logCoinChange_habit } = require('../models/userCoinsLogModel');
 const { updateExperience, updateUserHealthMana, updateCoins } = require('../models/userModel');
 
 exports.createHabit = async (req, res) => {
@@ -42,7 +42,7 @@ exports.getAllHabits = async (req, res) => {
 };
 exports.updateHabitDescription = async (req, res) => {
   const { habitId } = req.params;
-  const { description } = req.body;
+  const { note } = req.body;
 
   try {
     // First, check if the daily exists
@@ -52,9 +52,9 @@ exports.updateHabitDescription = async (req, res) => {
     }
 
     // Update the daily's description
-    const updateHabit = await updateHabit(habitId, { note: description });
+    const updatedHabit = await updateHabit(habitId, { note: note });
 
-    res.status(200).json(updateHabit);
+    res.status(200).json(updatedHabit);
   } catch (error) {
     console.error('Error updating habit description:', error);
     res.status(500).send({ message: "Failed to update habit description", error: error.message });
@@ -112,7 +112,7 @@ exports.performHabitAction = async (req, res) => {
     // Update coins if applicable
     if (coinGain > 0) {
       await updateCoins(userId, coinGain);
-      await logCoinChange(userId, coinGain);
+      await logCoinChange_habit(userId, coinGain,habitId);
       console.log(`Coins logged for User ID ${userId}: ${coinGain}`);
     }
     else {

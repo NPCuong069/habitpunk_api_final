@@ -1,7 +1,8 @@
 const { createDaily, getDailyById, updateDaily, completeDaily, countDailiesByUser, deleteDaily, getDailiesByUser } = require('../models/dailyModel');
 const { updateExperience } = require('../middleware/userMiddleware');
-const { updateCoins } = require('../models/userModel');
-const { getTodaysCoins, logCoinChange } = require('../models/userCoinsLogModel');
+const { updateCoins, getUserLevel } = require('../models/userModel');
+const { getTodaysCoins, logCoinChange, logCoinChange_daily } = require('../models/userCoinsLogModel');
+const { getUserParty, getActivePartyQuest, decrementQuestHp } = require('../models/partyModel');
 
 exports.createDaily = async (req, res) => {
   const { title, note, difficulty } = req.body;
@@ -93,8 +94,19 @@ exports.performDailyAction = async (req, res) => {
       return res.status(429).send({ message: "Daily coin limit reached for today" });
     }
     await updateCoins(userId, potentialCoins);
-    await logCoinChange(userId, potentialCoins, 'earned from daily');
+    await logCoinChange_daily(userId, potentialCoins, dailyId);
 
+    const partyId = await getUserParty(userId);
+    console.log(partyId);
+    if (partyId) {
+      const activeQuest = await getActivePartyQuest(partyId);
+      console.log(activeQuest);
+      if (activeQuest && activeQuest.status === 1) {
+        const userLevel = await getUserLevel(userId);
+        const damage = userLevel * 2;
+        await decrementQuestHp(activeQuest.id, damage);
+      }
+    }
     res.status(200).send({ message: "Daily completed, experience and coins gained", exp: expGain, coins: potentialCoins });
   } catch (error) {
     console.error('Error performing daily action:', error);

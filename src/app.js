@@ -10,6 +10,8 @@ const partyRoutes = require('./api/partyApi');
 const questRoutes = require('./api/questApi')
 const invitationRoutes = require('./api/invitationApi');
 const partyQuestRoutes = require('./api/partyQuestApi');
+const subscriptionRoutes = require('./api/subscriptionApi');
+const chatRoutes = require('./api/chatApi');
 const cors = require('cors');
 
 const app = express();
@@ -31,6 +33,8 @@ app.use('/api', partyRoutes);
 app.use('/api', questRoutes);
 app.use('/api', invitationRoutes);
 app.use('/api', partyQuestRoutes);
+app.use('/api', subscriptionRoutes);
+app.use('/api',chatRoutes);
 notificationCron.startCronJob();
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
